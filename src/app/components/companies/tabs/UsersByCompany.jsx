@@ -1,9 +1,7 @@
-//src/app/components/companies/CompaniesTable.jsx
+//src/app/components/companies/UsersByCompany.jsx
 "use client";
 
-import { useState } from "react";
-import api from "@/lib/axios";
-import { useCompanyStore } from "@/store/companyStore";
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -49,17 +47,11 @@ import {
   Pencil,
   Trash,
 } from "lucide-react";
-import { useUserStore } from "@/store/userStore";
+import axios from "axios";
 
-export const CompaniesTable = () => {
-  //REEMPLAZAR POR EL USUARIO LOGUEADO
-  const userLogin = {
-    name: "John Doe",
-    email: "jhon@tokem.com",
-    tokenLocalStorage: "asñdlkñsaldkñsad",
-  };
-  const { companies, removeCompany } = useCompanyStore();
-  const { users } = useUserStore();
+export const UsersByCompany = ({ companyId }) => {
+  /* const { companies, removeCompany } = useUserStore(); */
+  const [users, setUsers] = useState([]);
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
@@ -67,30 +59,38 @@ export const CompaniesTable = () => {
   const [emailDialog, setEmailDialog] = useState(false);
   const [phoneDialog, setPhoneDialog] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState({
     name: true,
     email: true,
     phone: true,
-    location: true,
+    role: true,
     website: true,
   });
 
+  useEffect(() => {
+    axios
+      .get(`https://api.nevtis.com/dialtools/users/allUsers/${companyId}`)
+      .then((res) => {
+        setUsers(res.data);
+      });
+  }, []);
+
   const columns = [
-    { key: "name", label: "Company Name" },
+    { key: "name", label: "Name" },
     { key: "email", label: "Email" },
     { key: "phone", label: "Phone" },
-    { key: "location", label: "Location" },
-    { key: "website", label: "Website" },
+    { key: "role", label: "Role" },
   ];
-  const handleEmailClick = (company) => {
-    setSelectedCompany(company);
+
+  const handleEmailClick = (user) => {
+    setSelectedUser(user);
     setEmailDialog(true);
   };
 
-  const handlePhoneClick = (company) => {
-    setSelectedCompany(company);
+  const handlePhoneClick = (user) => {
+    setSelectedUser(user);
     setPhoneDialog(true);
   };
 
@@ -105,15 +105,15 @@ export const CompaniesTable = () => {
     window.open(website, "_blank");
   };
 
-  const handleDelete = async () => {
-    if (!selectedCompany) return;
+  /* const handleDelete = async () => {
+    if (!selectedUser) return;
 
     setIsDeleting(true);
     try {
-      const response = await api.delete(`/company/${selectedCompany._id}`);
+      const response = await api.delete(`/company/${selectedUser._id}`);
 
       if (response.status === 200) {
-        removeCompany(selectedCompany._id);
+        removeCompany(selectedUser._id);
         setDeleteDialog(false);
         toast({
           description: "Company deleted successfully",
@@ -126,27 +126,26 @@ export const CompaniesTable = () => {
       });
     } finally {
       setIsDeleting(false);
-      setSelectedCompany(null);
+      setSelectedUser(null);
     }
-  };
+  }; */
 
-  const filteredCompanies = companies.filter((company) =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter((user) =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const paginatedCompanies = filteredCompanies.slice(
+  const paginatedUsers = filteredUsers.slice(
     (page - 1) * rowsPerPage,
     page * rowsPerPage
   );
 
-  const totalPages = Math.ceil(filteredCompanies.length / rowsPerPage);
-
+  const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
   return (
     <div className="space-y-4">
       {/* Barra superior con búsqueda y selector de columnas */}
       <div className="flex items-center justify-between">
         <Input
-          placeholder="Search businesses..."
+          placeholder="Search Users..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
@@ -178,8 +177,7 @@ export const CompaniesTable = () => {
                   name: true,
                   email: true,
                   phone: true,
-                  location: true,
-                  website: true,
+                  role: true,
                 })
               }
             >
@@ -205,60 +203,46 @@ export const CompaniesTable = () => {
           </TableHeader>
 
           <TableBody>
-            {paginatedCompanies.map((company) => (
-              <TableRow key={company._id}>
+            {paginatedUsers.map((user) => (
+              <TableRow key={user._id}>
                 {visibleColumns.name && (
                   <TableCell>
                     <Link
-                      href={`/dashboard/companies/${company._id}`}
+                      href={`/dashboard/users/${user._id}`}
                       className="text-brand-primary hover:underline"
                     >
-                      {company.name}
+                      {user.name}
                     </Link>
                   </TableCell>
                 )}
                 {visibleColumns.email && (
                   <TableCell>
                     <button
-                      onClick={() => handleEmailClick(company)}
+                      onClick={() => handleEmailClick(user)}
                       className="text-brand-secondary hover:underline"
                     >
-                      {company.email}
+                      {user.email}
                     </button>
                   </TableCell>
                 )}
                 {visibleColumns.phone && (
                   <TableCell>
                     <button
-                      onClick={() => handlePhoneClick(company)}
+                      onClick={() => handlePhoneClick(user)}
                       className="text-brand-secondary hover:underline"
                     >
-                      {company.phone}
+                      {user.phone}
                     </button>
                   </TableCell>
                 )}
-                {visibleColumns.location && (
+                {visibleColumns.role && (
                   <TableCell>
-                    <button
-                      onClick={() => handleLocationClick(company.address)}
-                      className="flex items-center gap-1 text-brand-secondary hover:underline"
-                    >
-                      <MapPin className="h-4 w-4" />
-                      Location
+                    <button className="flex items-center gap-1 text-brand-secondary hover:underline">
+                      {user.role}
                     </button>
                   </TableCell>
                 )}
-                {visibleColumns.website && (
-                  <TableCell>
-                    <button
-                      onClick={() => handleWebsiteClick(company.website)}
-                      className="flex items-center gap-1 text-brand-secondary hover:underline"
-                    >
-                      <Globe className="h-4 w-4" />
-                      Visit
-                    </button>
-                  </TableCell>
-                )}
+
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -270,24 +254,22 @@ export const CompaniesTable = () => {
                       <DropdownMenuItem
                         onClick={() =>
                           handleWebsiteClick(
-                            `https://app.salestoolspro.com/${userLogin.tokenLocalStorage}/${userLogin.email}`
+                            `https://app.salestoolspro.com/${user._id}`
                           )
                         }
                       >
                         <Globe className="mr-2 h-4 w-4" />
-                        Login as {company.name}
+                        Login as {user.name}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() =>
-                          navigator.clipboard.writeText(company._id)
-                        }
+                        onClick={() => navigator.clipboard.writeText(user._id)}
                       >
                         <Copy className="mr-2 h-4 w-4" />
                         Copy ID
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() =>
-                          (window.location.href = `/dashboard/companies/${company._id}`)
+                          (window.role.href = `/dashboard/companies/${user._id}`)
                         }
                       >
                         <Pencil className="mr-2 h-4 w-4" />
@@ -296,7 +278,7 @@ export const CompaniesTable = () => {
                       <DropdownMenuItem
                         className="text-red-600"
                         onClick={() => {
-                          setSelectedCompany(company);
+                          setSelectedUser(user);
                           setDeleteDialog(true);
                         }}
                       >
@@ -316,8 +298,8 @@ export const CompaniesTable = () => {
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500">
           Showing {(page - 1) * rowsPerPage + 1} to{" "}
-          {Math.min(page * rowsPerPage, filteredCompanies.length)} of{" "}
-          {filteredCompanies.length} entries
+          {Math.min(page * rowsPerPage, filteredUsers.length)} of{" "}
+          {filteredUsers.length} entries
         </p>
         <div className="flex items-center gap-2">
           <Select
@@ -382,10 +364,10 @@ export const CompaniesTable = () => {
       <Dialog open={emailDialog} onOpenChange={setEmailDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Send Email to {selectedCompany?.name}</DialogTitle>
+            <DialogTitle>Send Email to {selectedUser?.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p>Email: {selectedCompany?.email}</p>
+            <p>Email: {selectedUser?.email}</p>
           </div>
         </DialogContent>
       </Dialog>
@@ -394,18 +376,18 @@ export const CompaniesTable = () => {
       <Dialog open={phoneDialog} onOpenChange={setPhoneDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Contact {selectedCompany?.name}</DialogTitle>
+            <DialogTitle>Contact {selectedUser?.name}</DialogTitle>
           </DialogHeader>
           <div className="flex gap-4">
             <Button
-              onClick={() => window.open(`tel:${selectedCompany?.phone}`)}
+              onClick={() => window.open(`tel:${selectedUser?.phone}`)}
               className="flex-1"
             >
               <Phone className="mr-2 h-4 w-4" />
               Call
             </Button>
             <Button
-              onClick={() => window.open(`sms:${selectedCompany?.phone}`)}
+              onClick={() => window.open(`sms:${selectedUser?.phone}`)}
               className="flex-1"
             >
               <MessageSquare className="mr-2 h-4 w-4" />
@@ -419,10 +401,10 @@ export const CompaniesTable = () => {
       <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Company</DialogTitle>
+            <DialogTitle>Delete User</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete {selectedCompany?.name}? This
-              action cannot be undone.
+              Are you sure you want to delete {selectedUser?.name}? This action
+              cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -435,7 +417,7 @@ export const CompaniesTable = () => {
             </Button>
             <Button
               variant="destructive"
-              onClick={handleDelete}
+              /*        onClick={handleDelete} */
               disabled={isDeleting}
             >
               {isDeleting ? "Deleting..." : "Delete"}
@@ -447,4 +429,4 @@ export const CompaniesTable = () => {
   );
 };
 
-export default CompaniesTable;
+export default UsersByCompany;

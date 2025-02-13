@@ -19,7 +19,15 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function UsersPage() {
-  const { users, companies, setUsers, setCompanies, isLoading, setLoading, setError } = useUserStore();
+  const {
+    users,
+    companies,
+    setUsers,
+    setCompanies,
+    isLoading,
+    setLoading,
+    setError,
+  } = useUserStore();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -30,24 +38,27 @@ export default function UsersPage() {
       setLoading(true);
       try {
         // Fetch users
-        const usersResponse = await fetch('https://api.nevtis.com/user/users/allUsers');
-        if (!usersResponse.ok) throw new Error('Failed to fetch users');
+        const usersResponse = await fetch(
+          "https://api.nevtis.com/dialtools/users/allUsers"
+        );
+        if (!usersResponse.ok) throw new Error("Failed to fetch users");
         const usersData = await usersResponse.json();
         setUsers(usersData);
 
         // Fetch companies
-        const companiesResponse = await fetch('https://api.nevtis.com/dialtools/company/all');
-        if (!companiesResponse.ok) throw new Error('Failed to fetch companies');
+        const companiesResponse = await fetch(
+          "https://api.nevtis.com/dialtools/company/all"
+        );
+        if (!companiesResponse.ok) throw new Error("Failed to fetch companies");
         const companiesData = await companiesResponse.json();
         setCompanies(companiesData);
-
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
         setError(error.message);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load users data"
+          description: "Failed to load users data",
         });
       } finally {
         setLoading(false);
@@ -78,28 +89,28 @@ export default function UsersPage() {
     try {
       const endpoint = `https://api.nevtis.com/user/users/${selectedUser.role}/delete/${selectedUser._id}`;
       const response = await fetch(endpoint, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
-      if (!response.ok) throw new Error('Failed to delete user');
+      if (!response.ok) throw new Error("Failed to delete user");
 
-      setUsers(users.filter(user => user._id !== selectedUser._id));
+      setUsers(users.filter((user) => user._id !== selectedUser._id));
       setDeleteDialogOpen(false);
       setSelectedUser(null);
 
       toast({
-        description: "User deleted successfully"
+        description: "User deleted successfully",
       });
-
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error("Error deleting user:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete user"
+        description: "Failed to delete user",
       });
     }
   };
+  console.log(users);
 
   if (isLoading) {
     return (
@@ -119,9 +130,11 @@ export default function UsersPage() {
             <Skeleton className="h-4 w-[250px]" />
           </CardHeader>
           <CardContent className="space-y-4">
-            {Array(5).fill(null).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
+            {Array(5)
+              .fill(null)
+              .map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
           </CardContent>
         </Card>
       </div>
@@ -130,33 +143,33 @@ export default function UsersPage() {
 
   const userTypeCards = [
     {
-      role: 'owner',
-      title: 'Total Owners',
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-200',
-      iconEmoji: '👑'
+      role: "owner",
+      title: "Total Owners",
+      bgColor: "bg-purple-100",
+      borderColor: "border-purple-200",
+      iconEmoji: "👑",
     },
     {
-      role: 'admin',
-      title: 'Total Admins',
-      bgColor: 'bg-amber-50',
-      borderColor: 'border-amber-200',
-      iconEmoji: '⚡'
+      role: "admin",
+      title: "Total Admins",
+      bgColor: "bg-amber-50",
+      borderColor: "border-amber-200",
+      iconEmoji: "⚡",
     },
     {
-      role: 'manager',
-      title: 'Total Managers',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
-      iconEmoji: '🔷'
+      role: "manager",
+      title: "Total Managers",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-200",
+      iconEmoji: "🔷",
     },
     {
-      role: 'sale',
-      title: 'Total Sales',
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-200',
-      iconEmoji: '💎'
-    }
+      role: "sale",
+      title: "Total Sales",
+      bgColor: "bg-green-50",
+      borderColor: "border-green-200",
+      iconEmoji: "💎",
+    },
   ];
 
   return (
@@ -176,12 +189,27 @@ export default function UsersPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+        <Card className="border bg-gray-100 border-gray-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center justify-between">
+              Total Users
+              <span className="text-lg">👥</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{users.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {users.length === 1 ? "Active user" : "Active users"}
+            </p>
+          </CardContent>
+        </Card>
+
         {userTypeCards.map((type) => {
-          const count = users.filter(user => user.role === type.role).length;
+          const count = users.filter((user) => user.role === type.role).length;
           return (
-            <Card 
-              key={type.role} 
+            <Card
+              key={type.role}
               className={`border ${type.bgColor} ${type.borderColor}`}
             >
               <CardHeader className="pb-2">
@@ -193,7 +221,7 @@ export default function UsersPage() {
               <CardContent>
                 <div className="text-2xl font-bold">{count}</div>
                 <p className="text-xs text-muted-foreground">
-                  {count === 1 ? 'Active user' : 'Active users'}
+                  {count === 1 ? "Active user" : "Active users"}
                 </p>
               </CardContent>
             </Card>
@@ -202,7 +230,7 @@ export default function UsersPage() {
       </div>
 
       {/* Users Table */}
-      <UsersTable 
+      <UsersTable
         users={users}
         companies={companies}
         onEdit={handleEditUser}
@@ -210,7 +238,7 @@ export default function UsersPage() {
       />
 
       {/* Delete Dialog */}
-      <DeleteUserDialog 
+      <DeleteUserDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         user={selectedUser}
