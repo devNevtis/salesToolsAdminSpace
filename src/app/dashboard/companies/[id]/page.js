@@ -22,11 +22,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 
-import { UsersByCompany } from "@/app/components/companies/tabs/UsersByCompany";
-import { BasicInfoTab } from "@/app/components/companies/tabs/BasicInfoTab";
-import { PBXSettingsTab } from "@/app/components/companies/tabs/PBXSettingsTab";
-import { AppearanceTab } from "@/app/components/companies/tabs/AppearanceTab";
-import { StagesTab } from "@/app/components/companies/tabs/StagesTab";
+import { UsersByCompany } from "@/components/companies/tabs/UsersByCompany";
+import { BasicInfoTab } from "@/components/companies/tabs/BasicInfoTab";
+import { PBXSettingsTab } from "@/components/companies/tabs/PBXSettingsTab";
+import { AppearanceTab } from "@/components/companies/tabs/AppearanceTab";
+import { StagesTab } from "@/components/companies/tabs/StagesTab";
 
 export default function CompanyDetailPage({ params }) {
   const router = useRouter();
@@ -95,7 +95,7 @@ export default function CompanyDetailPage({ params }) {
     };
 
     fetchCompany();
-  }, [params.id]);
+  }, [params.id, form, toast, router]);
 
   // Manejar errores de tabs
   const getTabErrors = (tabName) => {

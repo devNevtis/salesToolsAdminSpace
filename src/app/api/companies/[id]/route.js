@@ -7,7 +7,6 @@ export async function DELETE(req, { params }) {
   
   try {
     const response = await api.delete(`/company/${id}`);
-    console.log("API Response:", response.data);
     return new Response(JSON.stringify({ message: "Company deleted successfully" }), {
       status: 200,
       headers: {

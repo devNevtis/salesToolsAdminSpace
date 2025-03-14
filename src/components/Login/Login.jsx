@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { FaLock } from "react-icons/fa6";
-import { useAuth } from "@/components/AuthProvider";
+/* import { useAuth } from "@/components/AuthProvider"; */
 import Cookies from "js-cookie";
 import Link from "next/link";
 import Image from "next/image";
@@ -16,22 +16,23 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
-  const { login } = useAuth();
+  /* const { login } = useAuth(); */
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        `${env.endpoints.auth.login}`,
+        `https://api.nevtis.com/dialtools/auth/login`,
         { email, password }
       );
-      
+
       const { token, user } = response.data;
       Cookies.set("token", token, { expires: 7 });
-      login(user);
-      router.push("/main/leads");
+
+      router.push("/dashboard");
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Hubo un error al iniciar sesión";
+      const errorMessage =
+        error.response?.data?.message || "Hubo un error al iniciar sesión";
       alert(errorMessage);
     }
   };

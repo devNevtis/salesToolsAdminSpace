@@ -111,7 +111,6 @@ export const CompanyDialog = ({
   };
 
   const handleSubmit = async (data) => {
-    console.log("Form Data to Submit:", JSON.stringify(data, null, 2));
     setIsSubmitting(true);
     try {
       await onSubmit(data);

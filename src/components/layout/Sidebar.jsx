@@ -7,7 +7,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 const menuItems = [
   {
     title: "Dashboard",
@@ -27,7 +28,12 @@ const menuItems = [
 ];
 
 const Sidebar = () => {
+  const router = useRouter();
   const pathname = usePathname();
+  const handleLogout = () => {
+    Cookies.remove("token");
+    router.push("/login");
+  };
 
   const SidebarContent = () => (
     <div className="flex min-h-[92vh] flex-col gap-4 py-4 bg-white">
@@ -56,7 +62,10 @@ const Sidebar = () => {
           );
         })}
       </nav>
-      <button className="text-lg font-semibold text-brand-primary">
+      <button
+        className="text-lg font-semibold text-brand-primary"
+        onClick={handleLogout}
+      >
         Logout
       </button>
     </div>

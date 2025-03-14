@@ -50,14 +50,11 @@ import {
   Trash,
 } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
-
+import Cookies from "js-cookie";
 export const CompaniesTable = () => {
   //REEMPLAZAR POR EL USUARIO LOGUEADO
-  const userLogin = {
-    name: "John Doe",
-    email: "jhon@tokem.com",
-    tokenLocalStorage: "asñdlkñsaldkñsad",
-  };
+  const userLogin = Cookies.get("token");
+
   const { companies, removeCompany } = useCompanyStore();
   const { users } = useUserStore();
   const { toast } = useToast();
@@ -270,7 +267,7 @@ export const CompaniesTable = () => {
                       <DropdownMenuItem
                         onClick={() =>
                           handleWebsiteClick(
-                            `https://app.salestoolspro.com/${userLogin.tokenLocalStorage}/${userLogin.email}`
+                            `https://app.salestoolspro.com/${userLogin}/${company.email}`
                           )
                         }
                       >

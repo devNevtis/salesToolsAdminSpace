@@ -70,13 +70,22 @@ export const UsersByCompany = ({ companyId }) => {
   });
 
   useEffect(() => {
-    axios
-      .get(`https://api.nevtis.com/dialtools/users/allUsers/${companyId}`)
-      .then((res) => {
-        setUsers(res.data);
-      });
-  }, []);
-
+    if (companyId) {
+      axios
+        .get(`https://api.nevtis.com/dialtools/users/allUsers/${companyId}`)
+        .then((res) => {
+          setUsers(res.data);
+        })
+        .catch((err) => {
+          console.error("Error fetching users:", err);
+          toast({
+            title: "Error",
+            description: "There was an error fetching the users.",
+            status: "error",
+          });
+        });
+    }
+  }, [companyId, toast]);
   const columns = [
     { key: "name", label: "Name" },
     { key: "email", label: "Email" },

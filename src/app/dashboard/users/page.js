@@ -5,10 +5,10 @@ import { useEffect, useState } from "react";
 import { useUserStore } from "@/store/userStore";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import UsersTable from "@/app/components/users/UsersTable";
+import UsersTable from "@/components/users/UsersTable";
 import { Plus } from "lucide-react";
-import { CreateUserDialog } from "@/app/components/users/CreateUserDialog";
-import { DeleteUserDialog } from "@/app/components/users/DeleteUserDialog";
+import { CreateUserDialog } from "@/components/users/CreateUserDialog";
+import { DeleteUserDialog } from "@/components/users/DeleteUserDialog";
 import {
   Card,
   CardContent,
@@ -58,7 +58,7 @@ export default function UsersPage() {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load users data",
+          description: error.message || "Failed to load data",
         });
       } finally {
         setLoading(false);
@@ -66,7 +66,7 @@ export default function UsersPage() {
     };
 
     fetchInitialData();
-  }, []);
+  }, [setUsers, setCompanies, setLoading, setError, toast]);
 
   const handleCreateUser = () => {
     setSelectedUser(null);
@@ -87,7 +87,7 @@ export default function UsersPage() {
     if (!selectedUser) return;
 
     try {
-      const endpoint = `https://api.nevtis.com/user/users/${selectedUser.role}/delete/${selectedUser._id}`;
+      const endpoint = `https://api.nevtis.com/dialtools/users/delete/${selectedUser._id}`;
       const response = await fetch(endpoint, {
         method: "DELETE",
       });
@@ -110,8 +110,6 @@ export default function UsersPage() {
       });
     }
   };
-  console.log(users);
-
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -179,7 +177,7 @@ export default function UsersPage() {
         <div>
           <h1 className="text-2xl font-bold text-brand-primary">Users</h1>
           <p className="text-muted-foreground">
-            Manage your organization's users and their permissions
+            Manage your organization&apos;s users and their permissions
           </p>
         </div>
         <Button onClick={handleCreateUser}>
