@@ -2,37 +2,38 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { 
-  LayoutDashboard, 
-  Building2, 
-  Users, 
-  Menu,
-} from "lucide-react";
+import { LayoutDashboard, Building2, Users, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 const menuItems = [
   {
     title: "Dashboard",
     href: "/dashboard",
-    icon: LayoutDashboard
+    icon: LayoutDashboard,
   },
   {
     title: "Companies",
     href: "/dashboard/companies",
-    icon: Building2
+    icon: Building2,
   },
   {
     title: "Users",
     href: "/dashboard/users",
-    icon: Users
-  }
+    icon: Users,
+  },
 ];
 
 const Sidebar = () => {
+  const router = useRouter();
   const pathname = usePathname();
+  const handleLogout = () => {
+    Cookies.remove("token");
+    router.push("/login");
+  };
 
   const SidebarContent = () => (
     <div className="flex min-h-[92vh] flex-col gap-4 py-4 bg-white">
@@ -43,15 +44,15 @@ const Sidebar = () => {
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
-          
+
           return (
-            <Link 
-              key={item.href} 
+            <Link
+              key={item.href}
               href={item.href}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
-                isActive 
-                  ? "bg-brand-primary text-white" 
+                isActive
+                  ? "bg-brand-primary text-white"
                   : "text-brand-primary hover:bg-brand-primary/10"
               )}
             >
@@ -61,6 +62,12 @@ const Sidebar = () => {
           );
         })}
       </nav>
+      <button
+        className="text-lg font-semibold text-brand-primary"
+        onClick={handleLogout}
+      >
+        Logout
+      </button>
     </div>
   );
 
@@ -74,8 +81,8 @@ const Sidebar = () => {
       {/* Mobile Sidebar */}
       <Sheet>
         <SheetTrigger asChild>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="lg:hidden hover:bg-brand-primary/10"
           >
             <Menu className="h-6 w-6 text-brand-primary" />

@@ -39,35 +39,46 @@ import {
   Pencil,
   Trash,
   ListFilter,
+  Globe,
 } from "lucide-react";
+
+//REEMPLAZAR POR EL USUARIO LOGUEADO
+const userLogin = {
+  name: "John Doe",
+  email: "jhon@tokem.com",
+  tokenLocalStorage: "asñdlkñsaldkñsad",
+};
 
 const getRoleColor = (role) => {
   switch (role?.toLowerCase()) {
-    case 'owner':
-      return 'bg-purple-100 text-purple-800';
-    case 'manager':
-      return 'bg-blue-100 text-blue-800';
-    case 'sale':
-      return 'bg-green-100 text-green-800';
+    case "owner":
+      return "bg-purple-100 text-purple-800";
+    case "manager":
+      return "bg-blue-100 text-blue-800";
+    case "sale":
+      return "bg-green-100 text-green-800";
     default:
-      return 'bg-gray-100 text-gray-500';
+      return "bg-gray-100 text-gray-500";
   }
 };
 
 const getDisplayRole = (role) => {
-  if (!role) return {
-    text: 'Unassigned',
-    tooltip: 'This user needs a role assignment'
-  };
+  if (!role)
+    return {
+      text: "Unassigned",
+      tooltip: "This user needs a role assignment",
+    };
 
   return {
     text: role.charAt(0).toUpperCase() + role.slice(1),
-    tooltip: null
+    tooltip: null,
   };
 };
 
 const getInitials = (firstName, lastName) => {
-  return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+  return `${firstName?.charAt(0) || ""}${
+    lastName?.charAt(0) || ""
+  }`.toUpperCase();
 };
 
 export const UsersTable = ({
@@ -91,36 +102,34 @@ export const UsersTable = ({
   });
 
   const columns = [
-    { key: 'user', label: 'User' },
-    { key: 'role', label: 'Role' },
-    { key: 'company', label: 'Company' },
-    { key: 'contact', label: 'Contact' },
-    { key: 'position', label: 'Position' },
+    { key: "user", label: "User" },
+    { key: "role", label: "Role" },
+    { key: "company", label: "Company" },
+    { key: "contact", label: "Contact" },
+    { key: "position", label: "Position" },
   ];
 
   const safeStringIncludes = (text, search) => {
     if (!text) return false;
     return text.toString().toLowerCase().includes(search.toLowerCase());
   };
-  
+
   const matchesSearchTerm = (user, searchTerm) => {
     if (!searchTerm) return true;
-    
-    return [
-      user?.name,
-      user?.email,
-      user?.position,
-      user?.phone
-    ].some(field => safeStringIncludes(field, searchTerm));
+
+    return [user?.name, user?.email, user?.position, user?.phone].some(
+      (field) => safeStringIncludes(field, searchTerm)
+    );
   };
-  
-  const filteredUsers = users.filter(user => {
+
+  const filteredUsers = users.filter((user) => {
     const matchesSearch = matchesSearchTerm(user, searchTerm);
-    const matchesRole = roleFilter === "all" || 
+    const matchesRole =
+      roleFilter === "all" ||
       (roleFilter === "unassigned" ? !user.role : user.role === roleFilter);
-    const matchesCompany = companyFilter === "all" || 
-      user.companyId === companyFilter;
-    
+    const matchesCompany =
+      companyFilter === "all" || user.companyId?._id === companyFilter;
+
     return matchesSearch && matchesRole && matchesCompany;
   });
 
@@ -134,19 +143,23 @@ export const UsersTable = ({
   const handleCopyEmail = (email) => {
     navigator.clipboard.writeText(email);
     toast({
-      description: "Email copied to clipboard"
+      description: "Email copied to clipboard",
     });
   };
 
   const handleCopyPhone = (phone) => {
     navigator.clipboard.writeText(phone);
     toast({
-      description: "Phone number copied to clipboard"
+      description: "Phone number copied to clipboard",
     });
   };
 
   const getCompanyName = (companyId) => {
-    return companies.find(company => company._id === companyId)?.name || 'Unknown Company';
+    return companyId?.name || "Unknown Company";
+  };
+
+  const handleWebsiteClick = (website) => {
+    window.open(website, "_blank");
   };
 
   return (
@@ -195,12 +208,15 @@ export const UsersTable = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[200px]">
-            {columns.map(column => (
+            {columns.map((column) => (
               <div key={column.key} className="flex items-center space-x-2 p-2">
                 <Checkbox
                   checked={visibleColumns[column.key]}
-                  onCheckedChange={(checked) => 
-                    setVisibleColumns(prev => ({...prev, [column.key]: checked}))
+                  onCheckedChange={(checked) =>
+                    setVisibleColumns((prev) => ({
+                      ...prev,
+                      [column.key]: checked,
+                    }))
                   }
                 />
                 <span>{column.label}</span>
@@ -210,7 +226,7 @@ export const UsersTable = ({
             <Button
               variant="ghost"
               className="w-full"
-              onClick={() => 
+              onClick={() =>
                 setVisibleColumns({
                   user: true,
                   role: true,
@@ -240,24 +256,26 @@ export const UsersTable = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-              {/* Primero el mensaje de "no results" */}
-              {filteredUsers.length === 0 && (
-                <TableRow>
-                  <TableCell 
-                    colSpan={Object.values(visibleColumns).filter(Boolean).length + 1}
-                    className="h-24 text-center"
-                  >
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <p>No users found</p>
-                      {searchTerm && (
-                        <p className="text-sm">
-                          Try adjusting your search or filters
-                        </p>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
+            {/* Primero el mensaje de "no results" */}
+            {filteredUsers.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={
+                    Object.values(visibleColumns).filter(Boolean).length + 1
+                  }
+                  className="h-24 text-center"
+                >
+                  <div className="flex flex-col items-center justify-center text-muted-foreground">
+                    <p>No users found</p>
+                    {searchTerm && (
+                      <p className="text-sm">
+                        Try adjusting your search or filters
+                      </p>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
             {paginatedUsers.map((user) => (
               <TableRow key={user._id}>
                 {visibleColumns.user && (
@@ -265,10 +283,12 @@ export const UsersTable = ({
                     <div className="flex items-center gap-3">
                       <Avatar>
                         <AvatarImage src={user.profilePhoto} />
-                        <AvatarFallback>{getInitials(user.firstName, user.lastName)}</AvatarFallback>
+                        <AvatarFallback>
+                          {getInitials(user.firstName, user.lastName)}
+                        </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
-                        <Link 
+                        <Link
                           href={`/dashboard/users/${user._id}`}
                           className="font-medium hover:underline"
                         >
@@ -333,7 +353,19 @@ export const UsersTable = ({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => navigator.clipboard.writeText(user._id)}>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          handleWebsiteClick(
+                            `https://app.salestoolspro.com/${userLogin.tokenLocalStorage}/${userLogin.email}`
+                          )
+                        }
+                      >
+                        <Globe className="mr-2 h-4 w-4" />
+                        Login as {user.name}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => navigator.clipboard.writeText(user._id)}
+                      >
                         <Copy className="mr-2 h-4 w-4" />
                         Copy ID
                       </DropdownMenuItem>
@@ -341,7 +373,7 @@ export const UsersTable = ({
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         className="text-red-600"
                         onClick={() => onDelete(user)}
                       >
@@ -360,7 +392,9 @@ export const UsersTable = ({
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500">
-          Showing {((page - 1) * rowsPerPage) + 1} to {Math.min(page * rowsPerPage, filteredUsers.length)} of {filteredUsers.length} entries
+          Showing {(page - 1) * rowsPerPage + 1} to{" "}
+          {Math.min(page * rowsPerPage, filteredUsers.length)} of{" "}
+          {filteredUsers.length} entries
         </p>
         <div className="flex items-center gap-2">
           <Select
@@ -388,7 +422,7 @@ export const UsersTable = ({
               onClick={() => setPage(1)}
               disabled={page === 1}
             >
-              {'<<'}
+              {"<<"}
             </Button>
             <Button
               variant="outline"
@@ -396,16 +430,18 @@ export const UsersTable = ({
               onClick={() => setPage(page - 1)}
               disabled={page === 1}
             >
-              {'<'}
+              {"<"}
             </Button>
-            <span className="px-4 py-2">Page {page} of {totalPages}</span>
+            <span className="px-4 py-2">
+              Page {page} of {totalPages}
+            </span>
             <Button
               variant="outline"
               size="icon"
               onClick={() => setPage(page + 1)}
               disabled={page === totalPages}
             >
-              {'>'}
+              {">"}
             </Button>
             <Button
               variant="outline"
@@ -413,7 +449,7 @@ export const UsersTable = ({
               onClick={() => setPage(totalPages)}
               disabled={page === totalPages}
             >
-              {'>>'}
+              {">>"}
             </Button>
           </div>
         </div>

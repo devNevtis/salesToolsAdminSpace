@@ -7,11 +7,14 @@ import { Upload, Image as ImageIcon, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
 
 export const LogoUploader = () => {
   const form = useFormContext();
   const { toast } = useToast();
-  const [preview, setPreview] = useState(form.watch("configuration.theme.logo") || null);
+  const [preview, setPreview] = useState(
+    form.watch("configuration.theme.logo") || null
+  );
   const [isUploading, setIsUploading] = useState(false);
 
   const handleFileUpload = async (event) => {
@@ -19,11 +22,11 @@ export const LogoUploader = () => {
     if (!file) return;
 
     // Validaciones básicas
-    if (!file.type.includes('image/')) {
+    if (!file.type.includes("image/")) {
       toast({
         variant: "destructive",
         title: "Invalid file type",
-        description: "Please upload an image file (SVG, PNG, JPG or GIF)"
+        description: "Please upload an image file (SVG, PNG, JPG or GIF)",
       });
       return;
     }
@@ -37,41 +40,36 @@ export const LogoUploader = () => {
     setIsUploading(true);
     try {
       const formData = new FormData();
-      formData.append('file', file);
-
-      console.log('Uploading file...'); // Debug log
-
+      formData.append("file", file);
       const response = await axios.post(
-        'https://api.nevtis.com/marketplace/files/create', 
+        "https://api.nevtis.com/marketplace/files/create",
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
-      console.log('Upload response:', response.data); // Debug log
-
       const fileUrl = `https://api.nevtis.com/marketplace/files/list/${response.data.key}`;
-      console.log('Generated URL:', fileUrl); // Debug log
 
-      form.setValue("configuration.theme.logo", fileUrl, { 
+      form.setValue("configuration.theme.logo", fileUrl, {
         shouldValidate: true,
-        shouldDirty: true 
+        shouldDirty: true,
       });
 
       toast({
         title: "Logo uploaded successfully",
         description: "The logo has been uploaded and saved",
       });
-
     } catch (error) {
-      console.error('Upload error:', error); // Debug log
+      console.error("Upload error:", error); // Debug log
       toast({
         variant: "destructive",
         title: "Upload failed",
-        description: error.response?.data?.message || "Failed to upload image. Please try again."
+        description:
+          error.response?.data?.message ||
+          "Failed to upload image. Please try again.",
       });
       setPreview(null);
     } finally {
@@ -80,9 +78,9 @@ export const LogoUploader = () => {
   };
 
   const handleRemoveLogo = () => {
-    form.setValue("configuration.theme.logo", "", { 
+    form.setValue("configuration.theme.logo", "", {
       shouldValidate: true,
-      shouldDirty: true 
+      shouldDirty: true,
     });
     setPreview(null);
     toast({
@@ -98,10 +96,12 @@ export const LogoUploader = () => {
         <div className="flex flex-col items-center justify-center gap-2">
           {preview ? (
             <div className="relative">
-              <img 
-                src={preview} 
-                alt="Logo preview" 
+              <Image
+                src={preview}
+                alt="Logo preview"
                 className="max-h-[100px] w-auto object-contain"
+                width={100}
+                height={100}
               />
               <button
                 type="button"
@@ -124,7 +124,7 @@ export const LogoUploader = () => {
               </div>
             </>
           )}
-          
+
           <input
             type="file"
             id="logo-upload"
@@ -147,14 +147,18 @@ export const LogoUploader = () => {
             ) : (
               <Upload className="h-4 w-4" />
             )}
-            {isUploading ? "Uploading..." : preview ? "Change logo" : "Select file"}
+            {isUploading
+              ? "Uploading..."
+              : preview
+              ? "Change logo"
+              : "Select file"}
           </label>
         </div>
       </div>
 
-      {process.env.NODE_ENV === 'development' && (
+      {process.env.NODE_ENV === "development" && (
         <div className="text-xs text-gray-500 mt-2">
-          <p>Current logo URL: {currentLogo || 'None'}</p>
+          <p>Current logo URL: {currentLogo || "None"}</p>
         </div>
       )}
     </div>

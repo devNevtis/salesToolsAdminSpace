@@ -12,7 +12,7 @@ export function usePbxDomains() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await pbxApi.get('/fusionpbx/domains/serv1/getAllDomain/');
+        const response = await pbxApi.get('/fusionpbx/domains/serv2/getAllDomain/');
         const formattedDomains = response.data.map(domain => ({
           value: domain, // Guardamos todo el objeto del dominio
           label: domain.domain_name // Mostramos solo el domain_name

@@ -25,11 +25,11 @@ import { AppearanceTab } from "./tabs/AppearanceTab";
 import { StagesTab } from "./tabs/StagesTab";
 
 const DEFAULT_THEME = {
-  base1: "#224F5A",      // brand.primary
-  base2: "#29ABE2",      // brand.secondary
+  base1: "#224F5A", // brand.primary
+  base2: "#29ABE2", // brand.secondary
   highlighting: "#66C7C3", // brand.accent
   callToAction: "#F25C05", // brand.light
-  logo: ""
+  logo: "",
 };
 
 const DEFAULT_STAGES = [
@@ -44,15 +44,20 @@ const DEFAULT_STAGES = [
   { name: "Follow Up", show: true },
 ];
 
-export const CompanyDialog = ({ open, onOpenChange, initialData, onSubmit }) => {
+export const CompanyDialog = ({
+  open,
+  onOpenChange,
+  initialData,
+  onSubmit,
+}) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("basic");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const form = useForm({
     resolver: zodResolver(companySchema),
     defaultValues: {
-      ...initialData || {
+      ...(initialData || {
         name: "",
         phone: "",
         email: "",
@@ -69,20 +74,31 @@ export const CompanyDialog = ({ open, onOpenChange, initialData, onSubmit }) => 
           stages: DEFAULT_STAGES.map((stage, index) => ({
             ...stage,
             order: index + 1,
-          }))
-        }
-      }
-    }
+          })),
+        },
+      }),
+    },
   });
 
-  const { formState: { errors } } = form;
+  const {
+    formState: { errors },
+  } = form;
 
   const getTabErrors = (tabName) => {
     switch (tabName) {
       case "basic":
-        return !!(errors.name || errors.phone || errors.email || errors.website || 
-                 errors.address || errors.city || errors.state || errors.postalCode || 
-                 errors.country || errors.description);
+        return !!(
+          errors.name ||
+          errors.phone ||
+          errors.email ||
+          errors.website ||
+          errors.address ||
+          errors.city ||
+          errors.state ||
+          errors.postalCode ||
+          errors.country ||
+          errors.description
+        );
       case "pbx":
         return !!errors.pbxUrl;
       case "appearance":
@@ -95,18 +111,19 @@ export const CompanyDialog = ({ open, onOpenChange, initialData, onSubmit }) => 
   };
 
   const handleSubmit = async (data) => {
-    console.log('Form Data to Submit:', JSON.stringify(data, null, 2));
     setIsSubmitting(true);
     try {
       await onSubmit(data);
       onOpenChange(false);
       toast({
-        description: initialData ? "Company updated successfully" : "Company created successfully"
+        description: initialData
+          ? "Company updated successfully"
+          : "Company created successfully",
       });
     } catch (error) {
       toast({
         variant: "destructive",
-        description: "Something went wrong. Please try again."
+        description: "Something went wrong. Please try again.",
       });
     } finally {
       setIsSubmitting(false);
@@ -123,28 +140,35 @@ export const CompanyDialog = ({ open, onOpenChange, initialData, onSubmit }) => 
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col h-full">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="flex flex-col h-full"
+          >
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="flex-1 flex flex-col min-h-0"
+            >
               <TabsList className="px-6 justify-start border-b bg-white">
-                <TabsTrigger 
+                <TabsTrigger
                   value="basic"
                   className={cn(getTabErrors("basic") && "text-red-500")}
                 >
                   Basic Info
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="pbx"
                   className={cn(getTabErrors("pbx") && "text-red-500")}
                 >
                   PBX Settings
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="appearance"
                   className={cn(getTabErrors("appearance") && "text-red-500")}
                 >
                   Appearance
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="stages"
                   className={cn(getTabErrors("stages") && "text-red-500")}
                 >

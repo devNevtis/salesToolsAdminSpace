@@ -1,4 +1,3 @@
-// src/app/components/users/CreateUserDialog.jsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -37,11 +36,12 @@ export const CreateUserDialog = ({
   open,
   onOpenChange,
   initialData,
-  companies = []
+  companies = [],
 }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [managers, setManagers] = useState([]);
+  const [extensions, setExtension] = useState([]);
   const [activeTab, setActiveTab] = useState("basic");
   const { setUsers, users } = useUserStore();
 
@@ -54,81 +54,117 @@ export const CreateUserDialog = ({
       lastName: initialData?.lastName || "",
       email: initialData?.email || "",
       phone: initialData?.phone || "",
-      extension: initialData?.extension || "",
-      password: "",
+      defaultValues: {
+        extension: initialData?.extension || null,
+      },
       position: initialData?.position || "",
       companyId: initialData?.companyId || "",
       vText: initialData?.vText || [],
-      managerId: initialData?.managerId || "",
+      managerId: initialData?.managerId || null,
       commissionRate: initialData?.commissionRate || 0,
-      ...initialData
-    }
+      ...initialData,
+    },
   });
 
+  const getCompanyById = (companyId) => {
+    return companies.find((company) => company._id === companyId);
+  };
+  const selectedCompanyId = form.watch("companyId");
+
   useEffect(() => {
-    // Actualizar el campo name cuando cambien firstName o lastName
-    const firstName = form.watch("firstName");
-    const lastName = form.watch("lastName");
+    const { firstName, lastName } = form.getValues();
     if (firstName || lastName) {
       form.setValue("name", `${firstName} ${lastName}`.trim());
     }
-  }, [form.watch("firstName"), form.watch("lastName")]);
+  }, [form.getValues("firstName"), form.getValues("lastName")]);
 
   useEffect(() => {
     const fetchManagers = async () => {
-      const companyId = form.watch("companyId");
-      if (!companyId || form.watch("role") !== "sale") return;
+      const companyId = form.getValues("companyId");
+      if (!companyId || form.getValues("role") !== "sale") return;
 
       try {
-        const response = await fetch('https://api.nevtis.com/user/users/manager/all');
-        if (!response.ok) throw new Error('Failed to fetch managers');
+        const response = await fetch(
+          "https://api.nevtis.com/user/users/manager/all"
+        );
+        if (!response.ok) throw new Error("Failed to fetch managers");
         const data = await response.json();
-        setManagers(data.filter(manager => manager.companyId === companyId));
+        setManagers(data.filter((manager) => manager.companyId === companyId));
       } catch (error) {
-        console.error('Error fetching managers:', error);
+        console.error("Error fetching managers:", error);
         toast({
           variant: "destructive",
-          description: "Failed to load managers"
+          description: "Failed to load managers",
         });
       }
     };
 
     fetchManagers();
-  }, [form.watch("companyId"), form.watch("role")]);
+  }, [form.getValues("companyId"), form.getValues("role")]);
 
-  const handleSubmit = async (formData) => {
-    console.log("Form submitted with data:", formData);
+  useEffect(() => {
+    const fetchExtensions = async () => {
+      if (!selectedCompanyId) return;
+      const companyId = form.getValues("companyId");
+      if (!companyId) return;
+      try {
+        const response = await fetch(
+          `https://api.nevtis.com/fusionpbx/extensions/serv2/getAllExtensionsByDomain/${
+            getCompanyById(form.getValues("companyId")).pbxUrl.domain_uuid
+          }/resume`
+        );
+
+        console.log(response);
+
+        if (!response.ok) throw new Error("Failed to fetch extensions");
+
+        const data = await response.json();
+        setExtension(data);
+      } catch (error) {
+        console.error("Error fetching extensions:", error);
+        toast({
+          variant: "destructive",
+          description: "Failed to load extensions",
+        });
+      }
+    };
+
+    fetchExtensions();
+  }, [form.getValues("companyId")]);
+
+  const handleSubmit = async () => {
     setIsSubmitting(true);
 
     try {
       let endpoint;
-      switch (formData.role) {
-        case 'owner':
-          endpoint = 'https://api.nevtis.com/user/users/owner/create';
+      switch (form.getValues("role")) {
+        case "owner":
+          endpoint = "https://api.nevtis.com/dialtools/users/owner/create";
           break;
-        case 'manager':
-          endpoint = 'https://api.nevtis.com/user/users/manager/create';
+        case "manager":
+          endpoint = "https://api.nevtis.com/dialtools/users/manager/create";
           break;
-        case 'sale':
-          endpoint = 'https://api.nevtis.com/user/users/saledialtools/create';
+        case "sale":
+          endpoint =
+            "https://api.nevtis.com/dialtools/users/saledialtools/create";
           break;
         default:
-          throw new Error('Invalid role selected');
+          throw new Error("Invalid role selected");
       }
 
-      console.log("Sending request to:", endpoint);
+      console.log("Enviando a:", endpoint);
 
       const response = await fetch(endpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(form.getValues()),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save user');
+        throw new Error(errorData.message || "Failed to save user");
       }
 
       const savedUser = await response.json();
@@ -137,16 +173,16 @@ export const CreateUserDialog = ({
       setUsers([...users, savedUser]);
 
       toast({
-        description: `User created successfully`
+        description: `User created successfully`,
       });
 
       onOpenChange(false);
       form.reset();
     } catch (error) {
-      console.error('Error saving user:', error);
+      console.error("Error saving user:", error);
       toast({
         variant: "destructive",
-        description: error.message || "Failed to save user"
+        description: error.message || "Failed to save user",
       });
     } finally {
       setIsSubmitting(false);
@@ -158,20 +194,22 @@ export const CreateUserDialog = ({
       <DialogContent className="max-w-2xl h-[80vh] p-0 flex flex-col">
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>
-            {initialData ? 'Edit User' : 'Create New User'}
+            {initialData ? "Edit User" : "Create New User"}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form 
+          <form
             className="flex flex-col h-full"
             onSubmit={form.handleSubmit(handleSubmit)}
           >
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="flex-1 flex flex-col min-h-0"
+            >
               <TabsList className="px-6 justify-start border-b bg-white">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                <TabsTrigger value="contact">Contact</TabsTrigger>
-                <TabsTrigger value="role">Role Settings</TabsTrigger>
               </TabsList>
 
               <div className="flex-1 overflow-y-auto p-6">
@@ -203,7 +241,22 @@ export const CreateUserDialog = ({
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
+                  <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="companyId"
@@ -221,7 +274,10 @@ export const CreateUserDialog = ({
                             </FormControl>
                             <SelectContent>
                               {companies.map((company) => (
-                                <SelectItem key={company._id} value={company._id}>
+                                <SelectItem
+                                  key={company._id}
+                                  value={company._id}
+                                >
                                   {company.name}
                                 </SelectItem>
                               ))}
@@ -231,9 +287,47 @@ export const CreateUserDialog = ({
                         </FormItem>
                       )}
                     />
-                  </div>
+                    <FormField
+                      control={form.control}
+                      name="extension"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Extension</FormLabel>
+                          <Select
+                            value={field.value?.extension || ""}
+                            onValueChange={(value) => {
+                              const selectedExtension = extensions.find(
+                                (ext) => ext.extension === value
+                              );
+                              form.setValue(
+                                "extension",
+                                selectedExtension || null
+                              );
+                            }}
+                            disabled={!selectedCompanyId}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Extension" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {extensions.map((ext) => (
+                                <SelectItem
+                                  key={ext.extension}
+                                  value={ext.extension}
+                                >
+                                  {ext.extension} -{" "}
+                                  {ext.effective_caller_id_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="firstName"
@@ -264,10 +358,10 @@ export const CreateUserDialog = ({
 
                   <FormField
                     control={form.control}
-                    name="position"
+                    name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Position</FormLabel>
+                        <FormLabel>Phone</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -275,151 +369,19 @@ export const CreateUserDialog = ({
                       </FormItem>
                     )}
                   />
-                </TabsContent>
-
-                <TabsContent value="contact" className="mt-0 space-y-4">
                   <FormField
                     control={form.control}
-                    name="email"
+                    name="position"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>Position</FormLabel>
                         <FormControl>
-                          <Input type="email" {...field} />
+                          <Input {...field} placeholder="Enter position" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="extension"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Extension</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {!initialData && (
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-                </TabsContent>
-
-                <TabsContent value="role" className="mt-0 space-y-4">
-                  {form.watch("role") === "sale" && (
-                    <>
-                      <FormField
-                        control={form.control}
-                        name="managerId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Manager</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select manager" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {managers.map((manager) => (
-                                  <SelectItem key={manager._id} value={manager._id}>
-                                    {manager.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="commissionRate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Commission Rate (%)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min="0"
-                                max="100"
-                                step="0.01"
-                                onChange={(e) => {
-                                  const value = e.target.value ? parseFloat(e.target.value) : 0;
-                                  field.onChange(value);
-                                }}
-                                value={field.value || ''}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </>
-                  )}
-
-                  {form.watch("role") === "owner" && (
-                    <FormField
-                      control={form.control}
-                      name="metricAccess"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Metric Access</FormLabel>
-                          <Select
-                            onValueChange={(value) => field.onChange(value === "true")}
-                            defaultValue={field.value?.toString()}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select access" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="true">Enabled</SelectItem>
-                              <SelectItem value="false">Disabled</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
                 </TabsContent>
               </div>
             </Tabs>
@@ -434,10 +396,7 @@ export const CreateUserDialog = ({
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit"
-                  disabled={isSubmitting}
-                >
+                <Button onClick={() => handleSubmit()} disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
